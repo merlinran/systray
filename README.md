@@ -17,9 +17,12 @@ Linux: coming soon
 ## Run example
 
 Mac:
-```
-cd example
-go run icons/mac systray
+```sh
+cd $GOPATH
+go get github.com/merlinran/systray
+cd $GOPATH/src/github.com/merlinran/systray
+xcodebuild -project $GOPATH/src/github.com/merlinran/systray/darwin/systray/systray.xcodeproj CONFIGURATION_BUILD_DIR="$GOPATH/src/github.com/merlinran/systray/example/systray"
+go run example/main.go example/icons/mac/ example/systray/
 ```
 
 ## How it works
