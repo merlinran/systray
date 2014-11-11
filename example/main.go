@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
+	"github.com/merlinran/systray"
 	"os"
-	"github.com/xilp/systray"
 )
 
 func main() {
@@ -12,11 +12,16 @@ func main() {
 		return
 	}
 
+	menu := []systray.MenuItem{
+		{"Show Info", "info"},
+		{"Quit", "quit"},
+	}
+
 	tray := systray.New(os.Args[1], os.Args[2], 6333)
 	tray.OnClick(func() {
 		println("clicked")
 	})
-	err := tray.Show("idle.ico", "Test systray")
+	err := tray.Show("idle.ico", "Test systray", menu[:])
 	if err != nil {
 		println(err.Error())
 	}
@@ -31,7 +36,7 @@ func main() {
 			if len(line) == 0 {
 				break
 			}
-			err := tray.Show(line, line)
+			err := tray.Show(line, line, menu[:])
 			if err != nil {
 				println(err.Error())
 			}

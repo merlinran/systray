@@ -12,6 +12,11 @@ import (
 	"sync"
 )
 
+type MenuItem struct {
+	Text   string
+	Action string
+}
+
 func (p *_SystraySvr) Run() error {
 	go func() {
 		if len(p.clientPath) == 0 {
@@ -26,16 +31,21 @@ func (p *_SystraySvr) Run() error {
 }
 
 func (p *_SystraySvr) Stop() error {
-	cmd := map[string]string{"action": "exit"}
+	cmd := map[string]interface{}{"action": "exit"}
 	return p.send(cmd)
 }
 
-func (p *_SystraySvr) Show(file string, hint string) error {
+func (p *_SystraySvr) Show(file string, hint string, menu []MenuItem) error {
 	path, err := filepath.Abs(filepath.Join(p.iconPath, file))
 	if err != nil {
 		return err
 	}
-	cmd := map[string]string{"action": "show", "path": path, "hint": hint}
+	cmd := map[string]interface{}{
+		"action": "show",
+		"path":   path,
+		"hint":   hint,
+		"menu":   menu,
+	}
 	return p.send(cmd)
 }
 
@@ -44,11 +54,11 @@ func (p *_SystraySvr) OnClick(fun func()) {
 }
 
 func _NewSystraySvr(iconPath string, clientPath string, port int) *_SystraySvr {
-	return &_SystraySvr{iconPath, clientPath, port, make(map[net.Conn]bool), nil, func(){}, sync.Mutex{}}
+	return &_SystraySvr{iconPath, clientPath, port, make(map[net.Conn]bool), nil, func() {}, sync.Mutex{}}
 }
 
 func (p *_SystraySvr) serve() error {
-	ln, err := net.Listen("tcp", ":" + strconv.Itoa(p.port))
+	ln, err := net.Listen("tcp", ":"+strconv.Itoa(p.port))
 	if err != nil {
 		return err
 	}
@@ -103,7 +113,7 @@ func (p *_SystraySvr) resend(conn net.Conn) error {
 	return err
 }
 
-func (p *_SystraySvr) send(cmd map[string]string) error {
+func (p *_SystraySvr) send(cmd map[string]interface{}) error {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
@@ -111,7 +121,6 @@ func (p *_SystraySvr) send(cmd map[string]string) error {
 	if err != nil {
 		return err
 	}
-
 	buf := new(bytes.Buffer)
 	err = binary.Write(buf, binary.LittleEndian, uint32(len(data)))
 	if err != nil {
@@ -151,11 +160,11 @@ func (p *_SystraySvr) received(cmd map[string]string) {
 }
 
 type _SystraySvr struct {
-	iconPath string
+	iconPath   string
 	clientPath string
-	port int
-	conns map[net.Conn]bool
-	lastest []byte
-	fclicked func()
-	lock sync.Mutex
+	port       int
+	conns      map[net.Conn]bool
+	lastest    []byte
+	fclicked   func()
+	lock       sync.Mutex
 }

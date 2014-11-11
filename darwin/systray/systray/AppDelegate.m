@@ -4,6 +4,16 @@
 
 @synthesize window = _window;
 
+- (IBAction)testAction:(id)sender;
+{
+	NSLog(@"Hello World");
+}
+
+- (IBAction)quitAction:(id)sender;
+{
+	[NSApp terminate:sender];
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -116,6 +126,21 @@
         if (hint) {
             [statusItem setToolTip:hint];
         }
+
+        NSLog(@"Cmd: %@", cmd);
+        NSArray *menuItems = [cmd objectForKey:@"menu"];
+        NSZone *zone = [NSMenu menuZone];
+        NSMenu *menu = [[NSMenu allocWithZone:zone] init];
+        NSMenuItem *item;
+
+        for (id menuItem in menuItems) {
+          NSString *text = [menuItem objectForKey:@"Text"];
+          item = [menu addItemWithTitle:text action:@selector(testAction:) keyEquivalent:@""];
+          [item setTarget:self];
+        }
+
+        [statusItem setMenu:menu];
+
     } else if ([action isEqualToString:@"exit"]) {
         [NSApp terminate:self];
     }
