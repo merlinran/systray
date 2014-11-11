@@ -4,16 +4,6 @@
 
 @synthesize window = _window;
 
-- (IBAction)testAction:(id)sender;
-{
-	NSLog(@"Hello World");
-}
-
-- (IBAction)quitAction:(id)sender;
-{
-	[NSApp terminate:sender];
-}
-
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -41,6 +31,12 @@
 
 - (IBAction)clicked:(id)sender {
     NSMutableDictionary *cmd = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"clicked", @"action", nil];
+    [self send:cmd];
+}
+
+- (IBAction)menuHandler:(id)sender;
+{
+    NSMutableDictionary *cmd = [NSMutableDictionary dictionaryWithObjectsAndKeys:[sender representedObject], @"action", nil];
     [self send:cmd];
 }
 
@@ -127,7 +123,6 @@
             [statusItem setToolTip:hint];
         }
 
-        NSLog(@"Cmd: %@", cmd);
         NSArray *menuItems = [cmd objectForKey:@"menu"];
         NSZone *zone = [NSMenu menuZone];
         NSMenu *menu = [[NSMenu allocWithZone:zone] init];
@@ -135,8 +130,11 @@
 
         for (id menuItem in menuItems) {
           NSString *text = [menuItem objectForKey:@"Text"];
-          item = [menu addItemWithTitle:text action:@selector(testAction:) keyEquivalent:@""];
+          NSString *actionName = [menuItem objectForKey:@"Action"];
+          item = [menu addItemWithTitle:text action:@selector(menuHandler:) keyEquivalent:@""];
+          [item setRepresentedObject:actionName];
           [item setTarget:self];
+            
         }
 
         [statusItem setMenu:menu];

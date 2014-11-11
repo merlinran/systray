@@ -18,8 +18,25 @@ func main() {
 	}
 
 	tray := systray.New(os.Args[1], os.Args[2], 6333)
+
+	quit := func() {
+		err := tray.Stop()
+		if err != nil {
+			println(err.Error())
+		}
+		os.Exit(0)
+	}
+
 	tray.OnClick(func() {
 		println("clicked")
+	})
+	tray.OnAction(func(actionName string) {
+		switch actionName {
+		case "info":
+			println("Show Info menu clicked")
+		case "quit":
+			quit()
+		}
 	})
 	err := tray.Show("idle.ico", "Test systray", menu[:])
 	if err != nil {
@@ -41,12 +58,7 @@ func main() {
 				println(err.Error())
 			}
 		}
-
-		err = tray.Stop()
-		if err != nil {
-			println(err.Error())
-		}
-		os.Exit(0)
+		quit()
 	}()
 
 	err = tray.Run()

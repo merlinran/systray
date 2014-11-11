@@ -53,8 +53,12 @@ func (p *_SystraySvr) OnClick(fun func()) {
 	p.fclicked = fun
 }
 
+func (p *_SystraySvr) OnAction(fun func(actionName string)) {
+	p.actionHandler = fun
+}
+
 func _NewSystraySvr(iconPath string, clientPath string, port int) *_SystraySvr {
-	return &_SystraySvr{iconPath, clientPath, port, make(map[net.Conn]bool), nil, func() {}, sync.Mutex{}}
+	return &_SystraySvr{iconPath, clientPath, port, make(map[net.Conn]bool), nil, func() {}, func(string) {}, sync.Mutex{}}
 }
 
 func (p *_SystraySvr) serve() error {
@@ -156,15 +160,18 @@ func (p *_SystraySvr) received(cmd map[string]string) {
 	switch action {
 	case "clicked":
 		p.fclicked()
+	default:
+		p.actionHandler(action)
 	}
 }
 
 type _SystraySvr struct {
-	iconPath   string
-	clientPath string
-	port       int
-	conns      map[net.Conn]bool
-	lastest    []byte
-	fclicked   func()
-	lock       sync.Mutex
+	iconPath      string
+	clientPath    string
+	port          int
+	conns         map[net.Conn]bool
+	lastest       []byte
+	fclicked      func()
+	actionHandler func(actionName string)
+	lock          sync.Mutex
 }
