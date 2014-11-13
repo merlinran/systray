@@ -14,6 +14,7 @@ func main() {
 
 	menu := []systray.MenuItem{
 		{"Show Info", "info"},
+		{"Disable Mmenu", "disableMenu"},
 		{"Quit", "quit"},
 	}
 
@@ -28,17 +29,28 @@ func main() {
 	}
 
 	tray.OnClick(func() {
-		println("clicked")
+		println("Enable menu…\n")
+		err := tray.SetMenu(menu[:])
+		if err != nil {
+			println(err.Error())
+		}
 	})
 	tray.OnAction(func(actionName string) {
 		switch actionName {
+		case "disableMenu":
+			println("Disable menu…\n")
+			err := tray.SetMenu(menu[0:0])
+			if err != nil {
+				println(err.Error())
+			}
 		case "info":
-			println("Show Info menu clicked")
+			println("Show Info menu clicked\n")
 		case "quit":
+			println("Quit…\n")
 			quit()
 		}
 	})
-	err := tray.Show("idle.ico", "Test systray", menu[:])
+	err := tray.Show("idle.ico", "Test systray")
 	if err != nil {
 		println(err.Error())
 	}
@@ -53,7 +65,7 @@ func main() {
 			if len(line) == 0 {
 				break
 			}
-			err := tray.Show(line, line, menu[:])
+			err := tray.Show(line, line)
 			if err != nil {
 				println(err.Error())
 			}

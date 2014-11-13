@@ -35,7 +35,7 @@ func (p *_SystraySvr) Stop() error {
 	return p.send(cmd)
 }
 
-func (p *_SystraySvr) Show(file string, hint string, menu []MenuItem) error {
+func (p *_SystraySvr) Show(file string, hint string) error {
 	path, err := filepath.Abs(filepath.Join(p.iconPath, file))
 	if err != nil {
 		return err
@@ -44,6 +44,13 @@ func (p *_SystraySvr) Show(file string, hint string, menu []MenuItem) error {
 		"action": "show",
 		"path":   path,
 		"hint":   hint,
+	}
+	return p.send(cmd)
+}
+
+func (p *_SystraySvr) SetMenu(menu []MenuItem) error {
+	cmd := map[string]interface{}{
+		"action": "setMenu",
 		"menu":   menu,
 	}
 	return p.send(cmd)
