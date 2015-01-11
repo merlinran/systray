@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
+	"github.com/merlinran/systray"
 	"os"
-	"github.com/xilp/systray"
 )
 
 func main() {
@@ -12,9 +12,43 @@ func main() {
 		return
 	}
 
+	menu := []systray.MenuItem{
+		{"Show Info", "info"},
+		{"Disable Mmenu", "disableMenu"},
+		{"Quit", "quit"},
+	}
+
 	tray := systray.New(os.Args[1], os.Args[2], 6333)
+
+	quit := func() {
+		err := tray.Stop()
+		if err != nil {
+			println(err.Error())
+		}
+		os.Exit(0)
+	}
+
 	tray.OnClick(func() {
-		println("clicked")
+		println("Enable menu…\n")
+		err := tray.SetMenu(menu[:])
+		if err != nil {
+			println(err.Error())
+		}
+	})
+	tray.OnAction(func(actionName string) {
+		switch actionName {
+		case "disableMenu":
+			println("Disable menu…\n")
+			err := tray.SetMenu(menu[0:0])
+			if err != nil {
+				println(err.Error())
+			}
+		case "info":
+			println("Show Info menu clicked\n")
+		case "quit":
+			println("Quit…\n")
+			quit()
+		}
 	})
 	err := tray.Show("idle.ico", "Test systray")
 	if err != nil {
@@ -36,12 +70,7 @@ func main() {
 				println(err.Error())
 			}
 		}
-
-		err = tray.Stop()
-		if err != nil {
-			println(err.Error())
-		}
-		os.Exit(0)
+		quit()
 	}()
 
 	err = tray.Run()

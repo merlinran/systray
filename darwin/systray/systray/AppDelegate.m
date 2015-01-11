@@ -34,10 +34,16 @@
     [self send:cmd];
 }
 
+- (IBAction)menuHandler:(id)sender;
+{
+    NSMutableDictionary *cmd = [NSMutableDictionary dictionaryWithObjectsAndKeys:[sender representedObject], @"action", nil];
+    [self send:cmd];
+}
+
 - (void)send:(NSMutableDictionary*)cmd {
-    NSError *error = NULL; 
+    NSError *error = NULL;
     NSData *json = [NSJSONSerialization dataWithJSONObject:cmd options:0 error:&error];
-    
+
     if (!json) {
         NSLog(@"Error: %@", error);
         return;
@@ -46,7 +52,7 @@
     NSMutableData* cache = [[NSMutableData alloc] initWithLength:0];
     [cache appendBytes:&len length:4];
     [cache appendBytes:[json bytes] length:len];
-    [outputStream write:[cache bytes] maxLength:len+4];  
+    [outputStream write:[cache bytes] maxLength:len+4];
 }
 
 - (void)open {
@@ -59,35 +65,35 @@
 
     CFReadStreamRef readStream;
     CFWriteStreamRef writeStream;
-    
+
     CFStreamCreatePairWithSocketToHost(NULL, (__bridge CFStringRef)host, port, &readStream, &writeStream);
     if(!CFWriteStreamOpen(writeStream)) {
         return;
     }
-    
-    inputStream = (__bridge NSInputStream *)readStream;  
-    outputStream = (__bridge NSOutputStream *)writeStream;  
-    
-    [inputStream setDelegate:self];  
-    [outputStream setDelegate:self];  
-    
-    [inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];  
-    [outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];  
-    
-    [inputStream open];  
-    [outputStream open];  
-}  
 
-- (void)close {  
+    inputStream = (__bridge NSInputStream *)readStream;
+    outputStream = (__bridge NSOutputStream *)writeStream;
+
+    [inputStream setDelegate:self];
+    [outputStream setDelegate:self];
+
+    [inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    [outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+
+    [inputStream open];
+    [outputStream open];
+}
+
+- (void)close {
     [inputStream close];
     [outputStream close];
-    
+
     [inputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
     [outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    
+
     [inputStream setDelegate:nil];
-    [outputStream setDelegate:nil];    
-}  
+    [outputStream setDelegate:nil];
+}
 
 - (void)received:(NSData*)data {
     NSError *error = nil;
@@ -116,8 +122,28 @@
         if (hint) {
             [statusItem setToolTip:hint];
         }
+
+    } else if ([action isEqualToString:@"setMenu"]) {
+      NSArray *menuItems = [cmd objectForKey:@"menu"];
+      if (!menuItems || [menuItems count] == 0) {
+        statusItem.menu = nil;
+      } else {
+        NSZone *zone = [NSMenu menuZone];
+        NSMenu *menu = [[NSMenu allocWithZone:zone] init];
+        NSMenuItem *item;
+
+        for (id menuItem in menuItems) {
+          NSString *text = [menuItem objectForKey:@"Text"];
+          NSString *actionName = [menuItem objectForKey:@"Action"];
+          item = [menu addItemWithTitle:text action:@selector(menuHandler:) keyEquivalent:@""];
+          [item setRepresentedObject:actionName];
+          [item setTarget:self];
+        }
+        [statusItem setMenu:menu];
+      }
+
     } else if ([action isEqualToString:@"exit"]) {
-        [NSApp terminate:self];
+      [NSApp terminate:self];
     }
 }
 
@@ -125,16 +151,16 @@
     [self open];
 }
 
-- (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)event {  
+- (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)event {
     switch(event) {
-        case NSStreamEventHasSpaceAvailable: {  
+        case NSStreamEventHasSpaceAvailable: {
             if(stream != outputStream) {
                 break;
             }
-            break;  
+            break;
         }
 
-        case NSStreamEventHasBytesAvailable: {  
+        case NSStreamEventHasBytesAvailable: {
             if (stream != inputStream) {
                 break;
             }
@@ -161,7 +187,7 @@
                 headReading = 4;
                 [self received: bodyCache];
             }
-            break;  
+            break;
         }
 
         case NSStreamEventOpenCompleted: {
@@ -177,9 +203,9 @@
         }
         default: {
             NSLog(@"Event: %lu", event);
-            break;  
-        }  
-    }  
-}  
+            break;
+        }
+    }
+}
 
 @end
